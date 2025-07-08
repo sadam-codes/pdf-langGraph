@@ -18,39 +18,31 @@ interface Document {
   pageContent: string;
   metadata: Record<string, any>;
 }
-
-function delay(ms: number) {
-  return new Promise((res) => setTimeout(res, ms));
-}
-
 async function geminiEmbeddingBatch(texts: string[]): Promise<number[][]> {
   const model = genAI.getGenerativeModel({
     model: 'gemini-embedding-exp-03-07',
   });
   const embeddings: number[][] = [];
-
-  for (const text of texts) {
-    try {
-      const result = await model.embedContent(text);
-      embeddings.push(result.embedding.values);
-      await delay(1000); // 🛑 Critical line: 1-second delay to avoid 429
-    } catch (error) {
-      console.error('Gemini API error:', error);
-      throw new Error(`Gemini embedding failed: ${error}`);
-    }
+for (const text of texts) {
+  try {
+    const result = await model.embedContent(text);
+    embeddings.push(result.embedding.values);
+    await new Promise((res) => setTimeout(res, 300)); 
+  } catch (error) {
+    console.error('Gemini API error:', error);
+    throw new Error(`Gemini embedding failed: ${error}`);
   }
-
+}
   return embeddings;
 }
-
 const config = {
   postgresConnectionOptions: {
     type: 'postgres',
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST || 'Nothing',
     port: 5432,
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'langGraphAgent',
+    user: process.env.DB_USER || 'Nothing',
+    password: process.env.DB_PASSWORD || 'Nothing',
+    database: process.env.DB_NAME || 'Nothing',
   },
   tableName: 'testlangchainjs',
   columns: {
@@ -74,7 +66,7 @@ export class PdfService {
       chunkOverlap: 200,
     });
 
-    const chunks = (await splitter.splitText(text)).slice(0, 5); 
+    const chunks = await splitter.splitText(text);
     const vectors = await geminiEmbeddingBatch(chunks);
 
     const documents: Document[] = chunks.map((chunk, index) => ({
@@ -91,7 +83,7 @@ export class PdfService {
         return vectors;
       },
       async embedQuery(_: string) {
-        throw new Error('embedQuery not supported in PdfService.');
+        throw new Error('EmbedQuery not supported in PdfService.');
       },
     };
 
