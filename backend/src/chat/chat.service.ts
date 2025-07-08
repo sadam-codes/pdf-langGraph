@@ -219,7 +219,7 @@ export class ChatService {
       console.log('Outgoing Response:', { question, answer });
       return { question, answer };
     } catch (error) {
-      console.error('❌ Error in LangGraph pipeline:', error);
+      console.error('Error in LangGraph pipeline:', error);
       const fallback =
         'Sorry, something went wrong while processing your request.';
       await this.saveMessage(chatId, 'user', question);
